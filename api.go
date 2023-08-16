@@ -25,7 +25,7 @@ func NewApiServer(listenAddress string, store Storage) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount))
-	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountById))
+	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleAccountWithId))
 
 	log.Println("JSON API server running on port: ", s.listenAddress)
 
@@ -39,6 +39,14 @@ func (s *APIServer) handleAccount(writter http.ResponseWriter, request *http.Req
 
 	if request.Method == "POST" {
 		return s.handleCreateAccount(writter, request)
+	}
+
+	return fmt.Errorf("method not allowed %s", request.Method)
+}
+
+func (s *APIServer) handleAccountWithId(writter http.ResponseWriter, request *http.Request) error {
+	if request.Method == "GET" {
+		return s.handleGetAccountById(writter, request)
 	}
 
 	if request.Method == "DELETE" {
@@ -59,11 +67,10 @@ func (s *APIServer) handleGetAccount(writter http.ResponseWriter, request *http.
 }
 
 func (s *APIServer) handleGetAccountById(writter http.ResponseWriter, request *http.Request) error {
-	id := mux.Vars(request)["id"]
-	idAsInt, err := strconv.Atoi(id)
+	idAsInt, err := getIdFromParameters()
 
 	if err != nil {
-		return fmt.Errorf("Invalid id given %s", id)
+		return err
 	}
 
 	account, err := s.store.GetAccountById(idAsInt)
@@ -92,7 +99,17 @@ func (s *APIServer) handleCreateAccount(writter http.ResponseWriter, request *ht
 }
 
 func (s *APIServer) handleDeleteAccount(writter http.ResponseWriter, request *http.Request) error {
-	return nil
+	idAsInt, err := getIdFromParameters(request)
+
+	if err != nil {
+		return err
+	}
+
+	if err := s.store.DeleteAccount(idAsInt); err != nil {
+		return err
+	}
+
+	return WriteJSON(writter, http.StatusOK, map[string]int{"deleted": idAsInt})
 }
 
 func (s *APIServer) handleTransfer(writter http.ResponseWriter, request *http.Request) error {
@@ -117,4 +134,15 @@ func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 			WriteJSON(writter, http.StatusBadRequest, ApiError{Error: err.Error()})
 		}
 	}
+}
+
+func getIdFromParameters(request *http.Request) (int, error) {
+	idAsString := mux.Vars(request)["id"]
+	idAsInt, err := strconv.Atoi(idAsString)
+
+	if err != nil {
+		return idAsInt, fmt.Errorf("Invalid id given %s", idAsString)
+	}
+
+	return idAsInt, nil
 }
