@@ -1,4 +1,4 @@
-module github.com/UEGH260899/gobank
+module github.com/UEHG260899/gobank
 
 go 1.20
 
