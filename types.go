@@ -1,6 +1,13 @@
 package main
 
-import "math/rand"
+import (
+	"math/rand"
+)
+
+type CreateAccountRequest struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
 
 type Account struct {
 	ID            int     `json:"id"`
@@ -12,9 +19,10 @@ type Account struct {
 
 func NewAccount(firstName, lastName string) *Account {
 	return &Account{
-		ID:            rand.Intn(10000),
 		FirstName:     firstName,
 		LastName:      lastName,
 		AccountNumber: int64(rand.Intn(100000)),
 	}
 }
+
+// docker run --name some-postgres -e POSTGRES_PASSWORD=He26Gu0899 -p 5432:5432 -d postgres
