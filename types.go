@@ -4,6 +4,11 @@ import (
 	"math/rand"
 )
 
+type TransferRequest struct {
+	ToAccount int64   `json:"to_account"`
+	Amount    float64 `json:"amount"`
+}
+
 type CreateAccountRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -24,5 +29,3 @@ func NewAccount(firstName, lastName string) *Account {
 		AccountNumber: int64(rand.Intn(100000)),
 	}
 }
-
-// docker run --name some-postgres -e POSTGRES_PASSWORD=He26Gu0899 -p 5432:5432 -d postgres
